@@ -149,10 +149,209 @@ body {
 
 /* Task List */
 .task-list {
-  padding: 0 40px;
+  padding: 0 20px;
+}
+
+/* Table View */
+.task-table {
+  width: 100%;
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table-header {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 12px;
+  grid-template-columns: 2fr 140px 120px 120px 1fr 140px 50px;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--card2);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 140px 120px 120px 1fr 140px 50px;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--separator);
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row.completed {
+  opacity: 0.5;
+}
+
+.table-row.completed .task-text {
+  text-decoration: line-through;
+  color: var(--gray);
+}
+
+.col-title {
+  font-size: 14px;
+  min-width: 0;
+}
+
+.task-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.status-badge:hover {
+  opacity: 0.8;
+}
+
+.stage-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--card2);
+  color: var(--orange);
+  cursor: pointer;
+}
+
+.stage-badge:hover {
+  background: var(--separator);
+}
+
+.date-text, .notes-text, .assignee-text {
+  font-size: 13px;
+  color: var(--gray);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.date-text:hover, .notes-text:hover, .assignee-text:hover {
+  background: var(--card2);
+}
+
+.col-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Inline Pickers */
+.inline-picker {
+  position: fixed;
+  background: var(--card);
+  border: 1px solid var(--separator);
+  border-radius: 10px;
+  padding: 6px;
+  z-index: 1001;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.15s ease;
+}
+
+.picker-option {
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: opacity 0.15s;
+}
+
+.picker-option:last-child {
+  margin-bottom: 0;
+}
+
+.picker-option:hover {
+  opacity: 0.85;
+}
+
+.picker-option.stage-option {
+  background: var(--card2);
+  color: var(--text);
+}
+
+.picker-option.stage-option:hover {
+  background: var(--separator);
+}
+
+.date-picker, .text-picker {
+  padding: 8px;
+}
+
+.date-input, .text-input {
+  background: var(--card2);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  width: 180px;
+}
+
+.date-input:focus, .text-input:focus {
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+/* Mobile responsive */
+@media (max-width: 900px) {
+  .table-header {
+    display: none;
+  }
+  
+  .table-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px;
+  }
+  
+  .col-title {
+    width: 100%;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  
+  .col-status, .col-stage, .col-date {
+    flex: none;
+  }
+  
+  .col-notes, .col-assignee {
+    display: none;
+  }
+  
+  .col-actions {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+  }
+  
+  .table-row {
+    position: relative;
+  }
 }
 
 .task-card {
