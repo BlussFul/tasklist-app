@@ -49,7 +49,7 @@ jobs:
           mv release.keystore src-tauri/gen/android/
       
       - name: Build Release APK
-        run: npx tauri android build --apk
+        run: npx tauri android build
         env:
           NDK_HOME: ${{ env.NDK_HOME }}
       
