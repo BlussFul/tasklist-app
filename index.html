@@ -9,125 +9,96 @@
 <body>
   <div id="app">
     <header class="header">
-      <div class="header-content">
-        <div class="header-left">
-          <h1>Задачи</h1>
-          <span class="stats" id="stats">0 из 0 выполнено</span>
-        </div>
-        <div class="header-right">
-          <button class="icon-btn" id="syncBtn" title="Синхронизация">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m0 0a9 9 0 0 1 9-9m-9 9a9 9 0 0 0 9 9"/>
-            </svg>
-          </button>
-          <button class="icon-btn" id="settingsBtn" title="Настройки">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4m-9-9h4m14 0h-4m-2.5-6.5 2.8-2.8m-12.6 12.6 2.8-2.8m0-7.6-2.8-2.8m12.6 12.6-2.8-2.8"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
+      <h1>TaskList</h1>
+      <div class="header-right">
+        <button class="icon-btn" id="syncBtn" title="Sync">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </button>
       </div>
     </header>
-
     <nav class="categories" id="categories"></nav>
     <main class="task-list" id="taskList"></main>
-
     <button class="fab" id="addBtn">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
     </button>
   </div>
 
-  <!-- Add Task Modal -->
   <div class="modal" id="addModal">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>Новая задача</h2>
-        <button class="close-btn" id="closeAddModal">&times;</button>
-      </div>
-      <input type="text" class="input" id="taskInput" placeholder="Что нужно сделать?" autofocus />
-      <div class="form-group">
-        <label>Категория</label>
-        <div class="chips" id="categoryChips"></div>
-      </div>
-      <div class="form-group">
-        <label>Статус</label>
-        <div class="chips" id="statusChips"></div>
-      </div>
-      <div class="form-group">
-        <label>Приоритет</label>
-        <div class="chips" id="priorityChips">
-          <button class="chip" data-priority="low">Низкий</button>
-          <button class="chip active" data-priority="medium">Средний</button>
-          <button class="chip" data-priority="high">Высокий</button>
-        </div>
-      </div>
-      <button class="btn primary" id="saveTaskBtn">Добавить</button>
+      <div class="modal-header"><h2>New Task</h2><button class="close-btn" id="closeAddModal">x</button></div>
+      <input type="text" class="input" id="taskInput" placeholder="Task name" />
+      <div class="form-group"><label>Category</label><div class="chips" id="categoryChips"></div></div>
+      <div class="form-group"><label>Status</label><div class="chips" id="statusChips"></div></div>
+      <button class="btn primary" id="saveTaskBtn">Add</button>
     </div>
   </div>
 
-  <!-- Sync Modal -->
   <div class="modal" id="syncModal">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>GitHub Sync</h2>
-        <button class="close-btn" id="closeSyncModal">&times;</button>
-      </div>
-      <p class="hint">Синхронизируйте задачи через GitHub Gist бесплатно</p>
-      <input type="password" class="input" id="tokenInput" placeholder="GitHub Personal Access Token" />
-      <input type="text" class="input" id="gistIdInput" placeholder="Gist ID (создастся автоматически)" />
-      <button class="btn" id="saveSyncBtn">Сохранить настройки</button>
-      <div class="btn-group">
-        <button class="btn" id="downloadBtn">⬇ Загрузить</button>
-        <button class="btn primary" id="uploadBtn">⬆ Выгрузить</button>
-      </div>
+      <div class="modal-header"><h2>Sync</h2><button class="close-btn" id="closeSyncModal">x</button></div>
+      <p class="hint">Sync via GitHub Gist</p>
+      <input type="password" class="input" id="tokenInput" placeholder="GitHub Token" />
+      <input type="text" class="input" id="gistIdInput" placeholder="Gist ID" />
+      <button class="btn" id="saveSyncBtn">Save</button>
+      <div class="btn-group"><button class="btn" id="downloadBtn">Download</button><button class="btn primary" id="uploadBtn">Upload</button></div>
     </div>
   </div>
 
-  <!-- Settings Modal -->
   <div class="modal" id="settingsModal">
     <div class="modal-backdrop"></div>
-    <div class="modal-content settings-content">
-      <div class="modal-header">
-        <h2>Настройки</h2>
-        <button class="close-btn" id="closeSettingsModal">&times;</button>
-      </div>
+    <div class="modal-content settings-modal">
+      <div class="modal-header"><h2>Settings</h2><button class="close-btn" id="closeSettingsModal">x</button></div>
       
       <div class="settings-section">
-        <h3>Отображение</h3>
-        <label class="toggle-row">
-          <span>Показывать выполненные</span>
-          <input type="checkbox" id="showCompleted" checked />
-        </label>
-        <label class="toggle-row">
-          <span>Компактный вид</span>
-          <input type="checkbox" id="compactView" />
-        </label>
+        <h3>Theme</h3>
+        <label class="toggle-row"><span>Dark Mode</span><input type="checkbox" id="darkMode" /></label>
+        <label class="toggle-row"><span>Show Completed</span><input type="checkbox" id="showCompleted" checked /></label>
       </div>
 
       <div class="settings-section">
-        <h3>Категории</h3>
-        <div id="categoryList" class="category-list"></div>
-        <div class="add-category-row">
-          <input type="text" class="input small" id="newCatName" placeholder="Название" />
-          <input type="color" class="color-input" id="newCatColor" value="#0a84ff" />
+        <h3>Categories</h3>
+        <div id="categoryList" class="settings-list"></div>
+        <div class="add-row">
+          <input type="text" class="input small" id="newCatName" placeholder="Name" />
+          <input type="color" class="color-input" id="newCatColor" value="#3b82f6" />
           <button class="btn small" id="addCategoryBtn">+</button>
         </div>
       </div>
 
       <div class="settings-section">
-        <h3>Данные</h3>
-        <div class="btn-group">
-          <button class="btn" id="exportBtn">Экспорт</button>
-          <button class="btn" id="importBtn">Импорт</button>
+        <h3>Statuses</h3>
+        <div id="statusList" class="settings-list"></div>
+        <div class="add-row">
+          <input type="text" class="input small" id="newStatusName" placeholder="Name" />
+          <input type="color" class="color-input" id="newStatusColor" value="#8b5cf6" />
+          <button class="btn small" id="addStatusBtn">+</button>
         </div>
-        <button class="btn danger" id="clearDataBtn">Удалить все задачи</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Stages</h3>
+        <div id="stageList" class="settings-list"></div>
+        <div class="add-row">
+          <input type="text" class="input small" id="newStageName" placeholder="Stage name" />
+          <button class="btn small" id="addStageBtn">+</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Data</h3>
+        <div class="btn-group"><button class="btn" id="exportBtn">Export</button><button class="btn" id="importBtn">Import</button></div>
+        <button class="btn danger" id="clearDataBtn" style="margin-top:20px">Delete All Tasks</button>
       </div>
     </div>
   </div>

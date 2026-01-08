@@ -144,6 +144,7 @@ body {
   align-items: center;
   border-bottom: 1px solid var(--border);
   transition: background 0.1s;
+  position: relative;
 }
 
 .table-row:last-child {
@@ -677,20 +678,23 @@ body {
     flex-wrap: wrap;
     gap: 8px;
     padding: 12px;
-    position: relative;
+    padding-right: 50px;
   }
   
   .col-checkbox {
     order: 0;
+    flex-shrink: 0;
   }
   
   .col-title {
     flex: 1;
     order: 1;
+    min-width: 0;
   }
   
   .col-status {
-    order: 2;
+    order: 3;
+    margin-top: 4px;
   }
   
   .col-stage, .col-date, .col-notes, .col-assignee {
@@ -700,17 +704,29 @@ body {
   .col-actions {
     position: absolute;
     right: 12px;
-    top: 12px;
+    top: 50%;
+    transform: translateY(-50%);
   }
   
   .delete-btn {
+    opacity: 0.6;
+  }
+  
+  .table-row:hover .delete-btn {
     opacity: 1;
   }
 }
 
 /* Settings lists */
 .settings-modal {
-  max-width: 500px;
+  max-width: 420px;
+  max-height: 95vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.settings-modal::-webkit-scrollbar {
+  display: none;
 }
 
 .settings-list {

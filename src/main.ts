@@ -438,57 +438,75 @@ document.getElementById('downloadBtn')?.addEventListener('click', async () => {
 });
 
 // Settings Modal
-document.getElementById('settingsBtn')?.addEventListener('click', () => {
-  (document.getElementById('darkMode') as HTMLInputElement).checked = state.settings.darkMode;
-  (document.getElementById('showCompleted') as HTMLInputElement).checked = state.settings.showCompleted;
-  renderSettingsLists();
-  openModal('settingsModal');
-});
+const settingsBtn = document.getElementById('settingsBtn');
+if (settingsBtn) {
+  settingsBtn.addEventListener('click', () => {
+    console.log('Settings clicked');
+    const darkModeEl = document.getElementById('darkMode') as HTMLInputElement;
+    const showCompletedEl = document.getElementById('showCompleted') as HTMLInputElement;
+    if (darkModeEl) darkModeEl.checked = state.settings.darkMode;
+    if (showCompletedEl) showCompletedEl.checked = state.settings.showCompleted;
+    renderSettingsLists();
+    openModal('settingsModal');
+  });
+}
 
 document.getElementById('closeSettingsModal')?.addEventListener('click', () => closeModal('settingsModal'));
 document.querySelector('#settingsModal .modal-backdrop')?.addEventListener('click', () => closeModal('settingsModal'));
 
-document.getElementById('darkMode')?.addEventListener('change', e => {
-  state.settings.darkMode = (e.target as HTMLInputElement).checked;
-  applyTheme();
-  saveState();
-});
+const darkModeCheckbox = document.getElementById('darkMode');
+if (darkModeCheckbox) {
+  darkModeCheckbox.addEventListener('change', e => {
+    state.settings.darkMode = (e.target as HTMLInputElement).checked;
+    applyTheme();
+    saveState();
+  });
+}
 
-document.getElementById('showCompleted')?.addEventListener('change', e => {
-  state.settings.showCompleted = (e.target as HTMLInputElement).checked;
-  saveState();
-  render();
-});
+const showCompletedCheckbox = document.getElementById('showCompleted');
+if (showCompletedCheckbox) {
+  showCompletedCheckbox.addEventListener('change', e => {
+    state.settings.showCompleted = (e.target as HTMLInputElement).checked;
+    saveState();
+    render();
+  });
+}
 
 function renderSettingsLists(): void {
   // Categories
-  const catEl = document.getElementById('categoryList')!;
-  catEl.innerHTML = state.categories.map(c => `
-    <div class="list-item">
-      <span class="item-color" style="background:${c.color}"></span>
-      <span class="item-name">${esc(c.name)}</span>
-      <button class="item-delete" data-type="cat" data-id="${c.id}">×</button>
-    </div>
-  `).join('');
+  const catEl = document.getElementById('categoryList');
+  if (catEl) {
+    catEl.innerHTML = state.categories.map(c => `
+      <div class="list-item">
+        <span class="item-color" style="background:${c.color}"></span>
+        <span class="item-name">${esc(c.name)}</span>
+        <button class="item-delete" data-type="cat" data-id="${c.id}">×</button>
+      </div>
+    `).join('');
+  }
   
   // Statuses
-  const statusEl = document.getElementById('statusList')!;
-  statusEl.innerHTML = state.statuses.map(s => `
-    <div class="list-item">
-      <span class="item-color" style="background:${s.color}"></span>
-      <span class="item-name">${esc(s.name)}</span>
-      <button class="item-delete" data-type="status" data-id="${s.id}">×</button>
-    </div>
-  `).join('');
+  const statusEl = document.getElementById('statusList');
+  if (statusEl) {
+    statusEl.innerHTML = state.statuses.map(s => `
+      <div class="list-item">
+        <span class="item-color" style="background:${s.color}"></span>
+        <span class="item-name">${esc(s.name)}</span>
+        <button class="item-delete" data-type="status" data-id="${s.id}">×</button>
+      </div>
+    `).join('');
+  }
   
   // Stages
-  const stageEl = document.getElementById('stageList')!;
-  stageEl.innerHTML = state.stages.map((s, i) => `
-    <div class="list-item">
-      <span class="item-name">${esc(s)}</span>
-      <button class="item-delete" data-type="stage" data-idx="${i}">×</button>
-    </div>
-  `).join('');
+  const stageEl = document.getElementById('stageList');
+  if (stageEl) {
+    stageEl.innerHTML = state.stages.map((s, i) => `
+      <div class="list-item">
+        <span class="item-name">${esc(s)}</span>
+        <button class="item-delete" data-type="stage" data-idx="${i}">×</button>
+      </div>
+    `).join('');
+  }
   
   // Delete handlers
   document.querySelectorAll('.item-delete').forEach(btn => {
@@ -509,41 +527,55 @@ function renderSettingsLists(): void {
 }
 
 // Add category
-document.getElementById('addCategoryBtn')?.addEventListener('click', () => {
-  const name = (document.getElementById('newCatName') as HTMLInputElement).value.trim();
-  const color = (document.getElementById('newCatColor') as HTMLInputElement).value;
-  if (name) {
-    state.categories.push({ id: crypto.randomUUID(), name, color });
-    (document.getElementById('newCatName') as HTMLInputElement).value = '';
-    saveState();
-    renderSettingsLists();
-    render();
-  }
-});
+const addCategoryBtn = document.getElementById('addCategoryBtn');
+if (addCategoryBtn) {
+  addCategoryBtn.addEventListener('click', () => {
+    const nameEl = document.getElementById('newCatName') as HTMLInputElement;
+    const colorEl = document.getElementById('newCatColor') as HTMLInputElement;
+    const name = nameEl?.value.trim();
+    const color = colorEl?.value || '#3b82f6';
+    if (name) {
+      state.categories.push({ id: crypto.randomUUID(), name, color });
+      if (nameEl) nameEl.value = '';
+      saveState();
+      renderSettingsLists();
+      render();
+    }
+  });
+}
 
 // Add status
-document.getElementById('addStatusBtn')?.addEventListener('click', () => {
-  const name = (document.getElementById('newStatusName') as HTMLInputElement).value.trim();
-  const color = (document.getElementById('newStatusColor') as HTMLInputElement).value;
-  if (name) {
-    state.statuses.push({ id: crypto.randomUUID(), name, color });
-    (document.getElementById('newStatusName') as HTMLInputElement).value = '';
-    saveState();
-    renderSettingsLists();
-    render();
-  }
-});
+const addStatusBtn = document.getElementById('addStatusBtn');
+if (addStatusBtn) {
+  addStatusBtn.addEventListener('click', () => {
+    const nameEl = document.getElementById('newStatusName') as HTMLInputElement;
+    const colorEl = document.getElementById('newStatusColor') as HTMLInputElement;
+    const name = nameEl?.value.trim();
+    const color = colorEl?.value || '#8b5cf6';
+    if (name) {
+      state.statuses.push({ id: crypto.randomUUID(), name, color });
+      if (nameEl) nameEl.value = '';
+      saveState();
+      renderSettingsLists();
+      render();
+    }
+  });
+}
 
 // Add stage
-document.getElementById('addStageBtn')?.addEventListener('click', () => {
-  const name = (document.getElementById('newStageName') as HTMLInputElement).value.trim();
-  if (name) {
-    state.stages.push(name);
-    (document.getElementById('newStageName') as HTMLInputElement).value = '';
-    saveState();
-    renderSettingsLists();
-  }
-});
+const addStageBtn = document.getElementById('addStageBtn');
+if (addStageBtn) {
+  addStageBtn.addEventListener('click', () => {
+    const nameEl = document.getElementById('newStageName') as HTMLInputElement;
+    const name = nameEl?.value.trim();
+    if (name) {
+      state.stages.push(name);
+      if (nameEl) nameEl.value = '';
+      saveState();
+      renderSettingsLists();
+    }
+  });
+}
 
 // Export/Import
 document.getElementById('exportBtn')?.addEventListener('click', () => {
