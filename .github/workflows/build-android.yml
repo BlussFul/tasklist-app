@@ -48,10 +48,12 @@ jobs:
         env:
           NDK_HOME: ${{ env.NDK_HOME }}
       
+      - name: List APK files
+        run: find src-tauri/gen/android -name "*.apk" -type f 2>/dev/null || echo "No APK found"
+      
       - name: Find and Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TaskList-APK
-          path: |
-            src-tauri/gen/android/app/build/outputs/apk/universal/debug/*.apk
-            src-tauri/gen/android/app/build/outputs/apk/debug/*.apk
+          path: src-tauri/gen/android/**/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
