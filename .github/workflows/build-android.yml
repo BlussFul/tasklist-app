@@ -43,17 +43,31 @@ jobs:
       - name: Init Android
         run: npx tauri android init
       
-      - name: Build Debug APK
-        run: npx tauri android build --debug
+      - name: Generate keystore
+        run: |
+          keytool -genkey -v -keystore release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=TaskList, OU=Dev, O=Dev, L=City, ST=State, C=US"
+          mv release.keystore src-tauri/gen/android/
+      
+      - name: Build Release APK
+        run: npx tauri android build --apk
         env:
           NDK_HOME: ${{ env.NDK_HOME }}
+      
+      - name: Sign APK
+        run: |
+          cd src-tauri/gen/android
+          find . -name "*.apk" -path "*/release/*" | head -1 | xargs -I {} sh -c '
+            apksigner sign --ks release.keystore --ks-pass pass:android --key-pass pass:android --out tasklist-release-signed.apk "{}"
+          '
       
       - name: List APK files
         run: find src-tauri/gen/android -name "*.apk" -type f 2>/dev/null || echo "No APK found"
       
-      - name: Find and Upload APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: TaskList-APK
-          path: src-tauri/gen/android/**/build/outputs/apk/**/*.apk
+          name: TaskList-Release-APK
+          path: |
+            src-tauri/gen/android/tasklist-release-signed.apk
+            src-tauri/gen/android/**/build/outputs/apk/**/*.apk
           if-no-files-found: warn
