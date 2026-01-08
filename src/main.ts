@@ -1,13 +1,18 @@
 interface Task {
   id: string;
   title: string;
-  completed: boolean;
   category: string;
-  status: 'in-progress' | 'blocked' | 'done' | 'later';
+  status: string;
   stage: string;
   startDate: string;
   notes: string;
   assignee: string;
+}
+
+interface StatusOption {
+  id: string;
+  name: string;
+  color: string;
 }
 
 interface Settings {
@@ -18,6 +23,8 @@ interface Settings {
 interface AppState {
   tasks: Task[];
   categories: { id: string; name: string; color: string }[];
+  statuses: StatusOption[];
+  stages: string[];
   settings: Settings;
   githubToken?: string;
   gistId?: string;
@@ -30,30 +37,34 @@ const DEFAULT_CATEGORIES = [
   { id: 'health', name: 'Здоровье', color: '#ef4444' },
 ];
 
-const STATUS_OPTIONS = [
+const DEFAULT_STATUSES: StatusOption[] = [
   { id: 'in-progress', name: 'Выполняется', color: '#8b5cf6' },
   { id: 'blocked', name: 'Заблокировано', color: '#ef4444' },
   { id: 'done', name: 'Готово', color: '#22c55e' },
   { id: 'later', name: 'ПОТОМ', color: '#f59e0b' },
 ];
 
-const STAGE_OPTIONS = ['В процессе', 'Забили хуй', 'ПОТОМ', 'Планирование', 'Тестирование'];
+const DEFAULT_STAGES = ['В процессе', 'Забили хуй', 'ПОТОМ', 'Планирование', 'Тестирование'];
 
 let state: AppState = {
   tasks: [],
   categories: DEFAULT_CATEGORIES,
+  statuses: DEFAULT_STATUSES,
+  stages: DEFAULT_STAGES,
   settings: { darkMode: false, showCompleted: true },
 };
 
 let selectedFilter: string | null = null;
 let selectedCategory = 'personal';
-let selectedStatus: Task['status'] = 'in-progress';
+let selectedStatus = 'in-progress';
 
 function loadState(): void {
   const data = localStorage.getItem('tasklist-state');
   if (data) {
     const parsed = JSON.parse(data);
     state = { ...state, ...parsed };
+    if (!state.statuses?.length) state.statuses = DEFAULT_STATUSES;
+    if (!state.stages?.length) state.stages = DEFAULT_STAGES;
     state.tasks = state.tasks.map(t => ({
       ...t,
       status: t.status || 'in-progress',
@@ -105,6 +116,10 @@ function renderCategories(): void {
   });
 }
 
+function getStatusInfo(statusId: string): StatusOption {
+  return state.statuses.find(s => s.id === statusId) || state.statuses[0] || { id: statusId, name: statusId, color: '#888' };
+}
+
 function renderTasks(): void {
   const el = document.getElementById('taskList')!;
   let tasks = [...state.tasks];
@@ -112,8 +127,10 @@ function renderTasks(): void {
   if (selectedFilter) tasks = tasks.filter(t => t.category === selectedFilter);
   if (!state.settings.showCompleted) tasks = tasks.filter(t => t.status !== 'done');
   
-  const order = { 'in-progress': 0, 'blocked': 1, 'later': 2, 'done': 3 };
-  tasks.sort((a, b) => order[a.status] - order[b.status]);
+  // Sort by status order
+  const statusOrder: Record<string, number> = {};
+  state.statuses.forEach((s, i) => statusOrder[s.id] = i);
+  tasks.sort((a, b) => (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99));
   
   if (!tasks.length) {
     el.innerHTML = `<div class="empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg><h3>Нет задач</h3><p>Нажмите + чтобы добавить</p></div>`;
@@ -133,7 +150,7 @@ function renderTasks(): void {
         <div></div>
       </div>
       ${tasks.map(t => {
-        const st = STATUS_OPTIONS.find(s => s.id === t.status)!;
+        const st = getStatusInfo(t.status);
         return `
           <div class="table-row" data-id="${t.id}" data-status="${t.status}">
             <div class="col-checkbox">
@@ -154,12 +171,15 @@ function renderTasks(): void {
     </div>
   `;
   
-  el.addEventListener('click', handleTableClick);
+  el.querySelectorAll('[data-action]').forEach(elem => {
+    elem.addEventListener('click', handleTableClick);
+  });
 }
 
 function handleTableClick(e: Event): void {
-  const target = e.target as HTMLElement;
-  const action = target.closest('[data-action]')?.getAttribute('data-action');
+  e.stopPropagation();
+  const target = e.currentTarget as HTMLElement;
+  const action = target.getAttribute('data-action');
   const row = target.closest('.table-row');
   const id = row?.getAttribute('data-id');
   if (!action || !id) return;
@@ -177,19 +197,19 @@ function handleTableClick(e: Event): void {
       saveState(); render();
       break;
     case 'editStatus':
-      showPicker(target, STATUS_OPTIONS.map(s => ({ value: s.id, label: s.name, color: s.color })), v => {
-        task.status = v as Task['status'];
+      showPicker(target, state.statuses.map(s => ({ value: s.id, label: s.name, color: s.color })), v => {
+        task.status = v;
         saveState(); render();
       });
       break;
     case 'editStage':
-      showPicker(target, STAGE_OPTIONS.map(s => ({ value: s, label: s })), v => {
+      showPicker(target, state.stages.map(s => ({ value: s, label: s })), v => {
         task.stage = v;
         saveState(); render();
       });
       break;
     case 'editDate':
-      showDatePicker(target, task.startDate, v => {
+      showDatePicker(target, v => {
         task.startDate = v;
         saveState(); render();
       });
@@ -231,14 +251,15 @@ function showPicker(target: HTMLElement, options: { value: string; label: string
   picker.style.top = `${rect.bottom + 4}px`;
   picker.style.left = `${rect.left}px`;
   picker.querySelectorAll('.picker-option').forEach(opt => {
-    opt.addEventListener('click', () => {
+    opt.addEventListener('click', (e) => {
+      e.stopPropagation();
       onSelect((opt as HTMLElement).dataset.value!);
       closePickers();
     });
   });
 }
 
-function showDatePicker(target: HTMLElement, _current: string, onSelect: (v: string) => void): void {
+function showDatePicker(target: HTMLElement, onSelect: (v: string) => void): void {
   closePickers();
   const picker = document.createElement('div');
   picker.className = 'inline-picker date-picker';
@@ -274,7 +295,7 @@ function showTextInput(target: HTMLElement, current: string, placeholder: string
 }
 
 document.addEventListener('click', e => {
-  if (!(e.target as HTMLElement).closest('.inline-picker') && !(e.target as HTMLElement).closest('[data-action]')) {
+  if (!(e.target as HTMLElement).closest('.inline-picker')) {
     closePickers();
   }
 });
@@ -287,17 +308,20 @@ function esc(s: string): string {
 
 // Modals
 function openModal(id: string): void {
-  document.getElementById(id)?.classList.add('open');
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add('open');
 }
 
 function closeModal(id: string): void {
-  document.getElementById(id)?.classList.remove('open');
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.remove('open');
 }
 
-// Add Task
-document.getElementById('addBtn')!.addEventListener('click', () => {
+// Add Task Modal
+document.getElementById('addBtn')?.addEventListener('click', () => {
   (document.getElementById('taskInput') as HTMLInputElement).value = '';
-  selectedStatus = 'in-progress';
+  selectedStatus = state.statuses[0]?.id || 'in-progress';
+  selectedCategory = state.categories[0]?.id || 'personal';
   renderAddModalChips();
   openModal('addModal');
 });
@@ -305,38 +329,39 @@ document.getElementById('addBtn')!.addEventListener('click', () => {
 function renderAddModalChips(): void {
   const catEl = document.getElementById('categoryChips')!;
   catEl.innerHTML = state.categories.map(c => `
-    <button class="chip ${selectedCategory === c.id ? 'active' : ''}" data-cat="${c.id}">${c.name}</button>
+    <button type="button" class="chip ${selectedCategory === c.id ? 'active' : ''}" data-cat="${c.id}">${c.name}</button>
   `).join('');
   catEl.querySelectorAll('.chip').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
       selectedCategory = (btn as HTMLElement).dataset.cat!;
       renderAddModalChips();
     });
   });
   
   const statusEl = document.getElementById('statusChips')!;
-  statusEl.innerHTML = STATUS_OPTIONS.map(s => `
-    <button class="chip ${selectedStatus === s.id ? 'active' : ''}" data-st="${s.id}" style="${selectedStatus === s.id ? `background:${s.color};color:white;border-color:${s.color}` : ''}">${s.name}</button>
+  statusEl.innerHTML = state.statuses.map(s => `
+    <button type="button" class="chip ${selectedStatus === s.id ? 'active' : ''}" data-st="${s.id}" style="${selectedStatus === s.id ? `background:${s.color};color:white;border-color:${s.color}` : ''}">${s.name}</button>
   `).join('');
   statusEl.querySelectorAll('.chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      selectedStatus = (btn as HTMLElement).dataset.st as Task['status'];
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      selectedStatus = (btn as HTMLElement).dataset.st!;
       renderAddModalChips();
     });
   });
 }
 
-document.getElementById('saveTaskBtn')!.addEventListener('click', () => {
+document.getElementById('saveTaskBtn')?.addEventListener('click', () => {
   const input = document.getElementById('taskInput') as HTMLInputElement;
   const title = input.value.trim();
   if (title) {
     state.tasks.push({
       id: crypto.randomUUID(),
       title,
-      completed: false,
       category: selectedCategory,
       status: selectedStatus,
-      stage: 'В процессе',
+      stage: state.stages[0] || 'В процессе',
       startDate: '',
       notes: '',
       assignee: '',
@@ -347,30 +372,30 @@ document.getElementById('saveTaskBtn')!.addEventListener('click', () => {
   }
 });
 
-document.getElementById('closeAddModal')!.addEventListener('click', () => closeModal('addModal'));
-document.querySelector('#addModal .modal-backdrop')!.addEventListener('click', () => closeModal('addModal'));
+document.getElementById('closeAddModal')?.addEventListener('click', () => closeModal('addModal'));
+document.querySelector('#addModal .modal-backdrop')?.addEventListener('click', () => closeModal('addModal'));
 
 // Sync Modal
-document.getElementById('syncBtn')!.addEventListener('click', () => {
+document.getElementById('syncBtn')?.addEventListener('click', () => {
   (document.getElementById('tokenInput') as HTMLInputElement).value = state.githubToken || '';
   (document.getElementById('gistIdInput') as HTMLInputElement).value = state.gistId || '';
   openModal('syncModal');
 });
 
-document.getElementById('closeSyncModal')!.addEventListener('click', () => closeModal('syncModal'));
-document.querySelector('#syncModal .modal-backdrop')!.addEventListener('click', () => closeModal('syncModal'));
+document.getElementById('closeSyncModal')?.addEventListener('click', () => closeModal('syncModal'));
+document.querySelector('#syncModal .modal-backdrop')?.addEventListener('click', () => closeModal('syncModal'));
 
-document.getElementById('saveSyncBtn')!.addEventListener('click', () => {
+document.getElementById('saveSyncBtn')?.addEventListener('click', () => {
   state.githubToken = (document.getElementById('tokenInput') as HTMLInputElement).value.trim() || undefined;
   state.gistId = (document.getElementById('gistIdInput') as HTMLInputElement).value.trim() || undefined;
   saveState();
   alert('Сохранено!');
 });
 
-document.getElementById('uploadBtn')!.addEventListener('click', async () => {
+document.getElementById('uploadBtn')?.addEventListener('click', async () => {
   if (!state.githubToken) { alert('Введите Token'); return; }
   try {
-    const content = JSON.stringify({ tasks: state.tasks, categories: state.categories }, null, 2);
+    const content = JSON.stringify({ tasks: state.tasks, categories: state.categories, statuses: state.statuses, stages: state.stages }, null, 2);
     const headers = { 'Authorization': `token ${state.githubToken}`, 'Content-Type': 'application/json' };
     if (state.gistId) {
       await fetch(`https://api.github.com/gists/${state.gistId}`, {
@@ -391,7 +416,7 @@ document.getElementById('uploadBtn')!.addEventListener('click', async () => {
   } catch { alert('Ошибка'); }
 });
 
-document.getElementById('downloadBtn')!.addEventListener('click', async () => {
+document.getElementById('downloadBtn')?.addEventListener('click', async () => {
   if (!state.githubToken || !state.gistId) { alert('Введите Token и Gist ID'); return; }
   try {
     const r = await fetch(`https://api.github.com/gists/${state.gistId}`, {
@@ -403,6 +428,8 @@ document.getElementById('downloadBtn')!.addEventListener('click', async () => {
       const parsed = JSON.parse(content);
       state.tasks = parsed.tasks || [];
       state.categories = parsed.categories || DEFAULT_CATEGORIES;
+      state.statuses = parsed.statuses || DEFAULT_STATUSES;
+      state.stages = parsed.stages || DEFAULT_STAGES;
       saveState();
       render();
       alert('Загружено!');
@@ -411,60 +438,115 @@ document.getElementById('downloadBtn')!.addEventListener('click', async () => {
 });
 
 // Settings Modal
-document.getElementById('settingsBtn')!.addEventListener('click', () => {
+document.getElementById('settingsBtn')?.addEventListener('click', () => {
   (document.getElementById('darkMode') as HTMLInputElement).checked = state.settings.darkMode;
   (document.getElementById('showCompleted') as HTMLInputElement).checked = state.settings.showCompleted;
-  renderCategoryList();
+  renderSettingsLists();
   openModal('settingsModal');
 });
 
-document.getElementById('closeSettingsModal')!.addEventListener('click', () => closeModal('settingsModal'));
-document.querySelector('#settingsModal .modal-backdrop')!.addEventListener('click', () => closeModal('settingsModal'));
+document.getElementById('closeSettingsModal')?.addEventListener('click', () => closeModal('settingsModal'));
+document.querySelector('#settingsModal .modal-backdrop')?.addEventListener('click', () => closeModal('settingsModal'));
 
-document.getElementById('darkMode')!.addEventListener('change', e => {
+document.getElementById('darkMode')?.addEventListener('change', e => {
   state.settings.darkMode = (e.target as HTMLInputElement).checked;
   applyTheme();
   saveState();
 });
 
-document.getElementById('showCompleted')!.addEventListener('change', e => {
+document.getElementById('showCompleted')?.addEventListener('change', e => {
   state.settings.showCompleted = (e.target as HTMLInputElement).checked;
   saveState();
   render();
 });
 
-function renderCategoryList(): void {
-  const el = document.getElementById('categoryList')!;
-  el.innerHTML = state.categories.map(c => `
-    <div class="category-item">
-      <span class="cat-color" style="background:${c.color}"></span>
-      <span class="cat-name">${esc(c.name)}</span>
-      <button class="cat-delete" data-id="${c.id}">&times;</button>
+function renderSettingsLists(): void {
+  // Categories
+  const catEl = document.getElementById('categoryList')!;
+  catEl.innerHTML = state.categories.map(c => `
+    <div class="list-item">
+      <span class="item-color" style="background:${c.color}"></span>
+      <span class="item-name">${esc(c.name)}</span>
+      <button class="item-delete" data-type="cat" data-id="${c.id}">×</button>
     </div>
   `).join('');
-  el.querySelectorAll('.cat-delete').forEach(btn => {
+  
+  // Statuses
+  const statusEl = document.getElementById('statusList')!;
+  statusEl.innerHTML = state.statuses.map(s => `
+    <div class="list-item">
+      <span class="item-color" style="background:${s.color}"></span>
+      <span class="item-name">${esc(s.name)}</span>
+      <button class="item-delete" data-type="status" data-id="${s.id}">×</button>
+    </div>
+  `).join('');
+  
+  // Stages
+  const stageEl = document.getElementById('stageList')!;
+  stageEl.innerHTML = state.stages.map((s, i) => `
+    <div class="list-item">
+      <span class="item-name">${esc(s)}</span>
+      <button class="item-delete" data-type="stage" data-idx="${i}">×</button>
+    </div>
+  `).join('');
+  
+  // Delete handlers
+  document.querySelectorAll('.item-delete').forEach(btn => {
     btn.addEventListener('click', () => {
-      state.categories = state.categories.filter(c => c.id !== (btn as HTMLElement).dataset.id);
+      const type = (btn as HTMLElement).dataset.type;
+      if (type === 'cat') {
+        state.categories = state.categories.filter(c => c.id !== (btn as HTMLElement).dataset.id);
+      } else if (type === 'status') {
+        state.statuses = state.statuses.filter(s => s.id !== (btn as HTMLElement).dataset.id);
+      } else if (type === 'stage') {
+        state.stages.splice(parseInt((btn as HTMLElement).dataset.idx!), 1);
+      }
       saveState();
-      renderCategoryList();
+      renderSettingsLists();
       render();
     });
   });
 }
 
-document.getElementById('addCategoryBtn')!.addEventListener('click', () => {
+// Add category
+document.getElementById('addCategoryBtn')?.addEventListener('click', () => {
   const name = (document.getElementById('newCatName') as HTMLInputElement).value.trim();
   const color = (document.getElementById('newCatColor') as HTMLInputElement).value;
   if (name) {
     state.categories.push({ id: crypto.randomUUID(), name, color });
     (document.getElementById('newCatName') as HTMLInputElement).value = '';
     saveState();
-    renderCategoryList();
+    renderSettingsLists();
     render();
   }
 });
 
-document.getElementById('exportBtn')!.addEventListener('click', () => {
+// Add status
+document.getElementById('addStatusBtn')?.addEventListener('click', () => {
+  const name = (document.getElementById('newStatusName') as HTMLInputElement).value.trim();
+  const color = (document.getElementById('newStatusColor') as HTMLInputElement).value;
+  if (name) {
+    state.statuses.push({ id: crypto.randomUUID(), name, color });
+    (document.getElementById('newStatusName') as HTMLInputElement).value = '';
+    saveState();
+    renderSettingsLists();
+    render();
+  }
+});
+
+// Add stage
+document.getElementById('addStageBtn')?.addEventListener('click', () => {
+  const name = (document.getElementById('newStageName') as HTMLInputElement).value.trim();
+  if (name) {
+    state.stages.push(name);
+    (document.getElementById('newStageName') as HTMLInputElement).value = '';
+    saveState();
+    renderSettingsLists();
+  }
+});
+
+// Export/Import
+document.getElementById('exportBtn')?.addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -472,7 +554,7 @@ document.getElementById('exportBtn')!.addEventListener('click', () => {
   a.click();
 });
 
-document.getElementById('importBtn')!.addEventListener('click', () => {
+document.getElementById('importBtn')?.addEventListener('click', () => {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json';
@@ -495,7 +577,7 @@ document.getElementById('importBtn')!.addEventListener('click', () => {
   input.click();
 });
 
-document.getElementById('clearDataBtn')!.addEventListener('click', () => {
+document.getElementById('clearDataBtn')?.addEventListener('click', () => {
   if (confirm('Удалить все задачи?')) {
     state.tasks = [];
     saveState();

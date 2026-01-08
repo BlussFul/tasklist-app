@@ -707,3 +707,65 @@ body {
     opacity: 1;
   }
 }
+
+/* Settings lists */
+.settings-modal {
+  max-width: 500px;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--card2);
+  border-radius: 8px;
+}
+
+.item-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.item-name {
+  flex: 1;
+  font-size: 13px;
+}
+
+.item-delete {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--red);
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.add-row .input.small {
+  flex: 1;
+}
