@@ -55,10 +55,10 @@ jobs:
       
       - name: Sign APK
         run: |
-          cd src-tauri/gen/android
-          find . -name "*.apk" -path "*/release/*" | head -1 | xargs -I {} sh -c '
-            apksigner sign --ks release.keystore --ks-pass pass:android --key-pass pass:android --out tasklist-release-signed.apk "{}"
-          '
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | tail -1)
+          APK_PATH="src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk"
+          ${BUILD_TOOLS}zipalign -v 4 "$APK_PATH" tasklist-aligned.apk
+          ${BUILD_TOOLS}apksigner sign --ks src-tauri/gen/android/release.keystore --ks-pass pass:android --key-pass pass:android --out tasklist-release.apk tasklist-aligned.apk
       
       - name: List APK files
         run: find src-tauri/gen/android -name "*.apk" -type f 2>/dev/null || echo "No APK found"
@@ -67,7 +67,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: TaskList-Release-APK
-          path: |
-            src-tauri/gen/android/tasklist-release-signed.apk
-            src-tauri/gen/android/**/build/outputs/apk/**/*.apk
+          path: tasklist-release.apk
           if-no-files-found: warn
