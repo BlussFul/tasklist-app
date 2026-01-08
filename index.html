@@ -33,7 +33,6 @@
     </header>
 
     <nav class="categories" id="categories"></nav>
-
     <main class="task-list" id="taskList"></main>
 
     <button class="fab" id="addBtn">
@@ -72,20 +71,63 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
-  <div class="modal" id="settingsModal">
+  <!-- Sync Modal -->
+  <div class="modal" id="syncModal">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
         <h2>GitHub Sync</h2>
-        <button class="close-btn" id="closeSettingsModal">&times;</button>
+        <button class="close-btn" id="closeSyncModal">&times;</button>
       </div>
       <p class="hint">Синхронизируйте задачи через GitHub Gist бесплатно</p>
       <input type="password" class="input" id="tokenInput" placeholder="GitHub Personal Access Token" />
-      <input type="text" class="input" id="gistInput" placeholder="Gist ID (опционально)" />
+      <input type="text" class="input" id="gistIdInput" placeholder="Gist ID (создастся автоматически)" />
+      <button class="btn" id="saveSyncBtn">Сохранить настройки</button>
       <div class="btn-group">
-        <button class="btn" id="disconnectBtn">Отключить</button>
-        <button class="btn primary" id="saveSettingsBtn">Сохранить</button>
+        <button class="btn" id="downloadBtn">⬇ Загрузить</button>
+        <button class="btn primary" id="uploadBtn">⬆ Выгрузить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content settings-content">
+      <div class="modal-header">
+        <h2>Настройки</h2>
+        <button class="close-btn" id="closeSettingsModal">&times;</button>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Отображение</h3>
+        <label class="toggle-row">
+          <span>Показывать выполненные</span>
+          <input type="checkbox" id="showCompleted" checked />
+        </label>
+        <label class="toggle-row">
+          <span>Компактный вид</span>
+          <input type="checkbox" id="compactView" />
+        </label>
+      </div>
+
+      <div class="settings-section">
+        <h3>Категории</h3>
+        <div id="categoryList" class="category-list"></div>
+        <div class="add-category-row">
+          <input type="text" class="input small" id="newCatName" placeholder="Название" />
+          <input type="color" class="color-input" id="newCatColor" value="#0a84ff" />
+          <button class="btn small" id="addCategoryBtn">+</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Данные</h3>
+        <div class="btn-group">
+          <button class="btn" id="exportBtn">Экспорт</button>
+          <button class="btn" id="importBtn">Импорт</button>
+        </div>
+        <button class="btn danger" id="clearDataBtn">Удалить все задачи</button>
       </div>
     </div>
   </div>
