@@ -43,13 +43,15 @@ jobs:
       - name: Init Android
         run: npx tauri android init
       
-      - name: Build APK
-        run: npx tauri android build
+      - name: Build Debug APK
+        run: npx tauri android build --debug
         env:
           NDK_HOME: ${{ env.NDK_HOME }}
       
-      - name: Upload APK
+      - name: Find and Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TaskList-APK
-          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          path: |
+            src-tauri/gen/android/app/build/outputs/apk/universal/debug/*.apk
+            src-tauri/gen/android/app/build/outputs/apk/debug/*.apk
